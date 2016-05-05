@@ -48,7 +48,7 @@ int main()
 	plain_cipher_print_cmp(plaintext5, sizeof(plaintext5), key, sizeof(key), 5);
 
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 
@@ -81,6 +81,8 @@ void plain_cipher_print_cmp(const uint8_t *plaintext, size_t plainSize,
 	print_hex(plaintext, plainSize);
 	printf("\nCiphertext%d:\n", nr);
 	print_hex(ciphertext, sizeof(ciphertext));
+	printf("\nDecrypted Ciphertext%d:\n", nr);
+	print_hex(decryptedCiphertext, sizeof(decryptedCiphertext));
 
 	printf("\nPlaintext%d equals decrypt(Ciphertext%d): ", nr, nr);
 
