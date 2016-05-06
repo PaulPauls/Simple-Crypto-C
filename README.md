@@ -8,16 +8,11 @@ Improvements of the following kind (no matter how small) are especially welcome:
 - Improvements on Speed without reducing understandability
 - Improvements on Coding Style
 
-This Crypto Implementation is not intended for maximal speed or minimal use of 
-memory but rather for a good understandability of the code.
 
-In the following months I intend to implement (ordered by priority):
-- AES256_ECB decrypt
-- Refined Makefile
-- AES256_CBC
-- AES192, AES128
-- RSA
-- Key Exchange, InputOutput, ECDH, etc
+This Crypto Implementation is not intended for maximal speed or minimal use of
+memory but rather for a good understandability of the code.
+Demo files and detailed comments show how to call and use the library functions.
+
 
 **Author: Paul Pauls (https://github.com/PaulPauls)**
 
