@@ -1,7 +1,7 @@
 #include <stdint.h> // uint8_t
-#include <stddef.h> // size_t
-#include <stdio.h>  // fprintf()
-#include <stdlib.h> // EXIT_FAILURE
+#include <stdio.h>  // printf()
+#include <stdlib.h> // abort(), size_t
+#include <string.h> // memcpy()
 
 
 
@@ -10,14 +10,14 @@ void aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
 
-void copy_block(const uint8_t *input, size_t inputSize, uint8_t *state);
-void key_expansion(const uint8_t *key, uint8_t *expandedKey, const uint8_t *sbox);
-void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round);
-void sub_bytes(uint8_t *state, const uint8_t *sbox);
-void shift_row(uint8_t *state);
-void inv_shift_row(uint8_t *state);
-void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix);
-uint8_t galois_mul(uint8_t a, uint8_t b);
+// static private functions
+static void key_expansion(const uint8_t *key, uint8_t *expandedKey, const uint8_t *sbox);
+static void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round);
+static void sub_bytes(uint8_t *state, const uint8_t *sbox);
+static void shift_row(uint8_t *state);
+static void inv_shift_row(uint8_t *state);
+static void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix);
+static uint8_t galois_mul(uint8_t a, uint8_t b);
 
 
 
@@ -51,17 +51,20 @@ uint8_t galois_mul(uint8_t a, uint8_t b);
 void aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize)
 {
-	if (keySize != 32 || inputSize > stateSize || stateSize % 16 != 0) {
-		perror("aes256_ecb_encrypt(...) was called with one of the following errors:\n \
+	if (keySize != 32 || inputSize > stateSize || stateSize % 16 != 0 ||
+		!input || !key || !state) {
+		printf("Error: aes256_ecb_encrypt(...) was called with one of the following errors:\n \
 			\t Size of key was not 256 bit\n \
 			\t OR inputarray was larger than the statearray\n \
-			\t OR the size of the statearray was not a multiplicity of 16 bytes\n");
+			\t OR the size of the statearray was not a multiplicity of 16 bytes\n \
+			\t OR the input, key or output array is a NULL pointer\n");
 
-		exit(EXIT_FAILURE);
+		abort();
 	}
 
 
-	uint8_t sbox[] = {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+	// static to allocate memory at compile time instead of call stack
+	static uint8_t sbox[] = {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     		0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
     		0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
     		0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
@@ -77,17 +80,17 @@ void aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
     		0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E, 0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
     		0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
     		0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16};
-	uint8_t mixMultMatrix[]	= {0x02, 0x03, 0x01, 0x01,
+	static uint8_t mixMultMatrix[]	= {0x02, 0x03, 0x01, 0x01,
 		0x01, 0x02, 0x03, 0x01,
 		0x01, 0x01, 0x02, 0x03,
 		0x03, 0x01, 0x01, 0x02};
-	uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
+	static uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
 
 
 	// AES can be applied in-memory, however as we deliver a seperate
 	// outputcipher we first have to copy the input to the state to leave
 	// the input unchanged
-	copy_block(input, inputSize, state);
+	memcpy(state, input, inputSize);
 
 	// Expand Key
 	key_expansion(key, expandedKey, sbox);
@@ -140,18 +143,21 @@ void aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize)
 {
-	if (keySize != 32 || inputSize > stateSize || inputSize % 16 != 0) {
-		perror("aes256_ecb_decrypt(...) was called with one of the following errors:\n \
+	if (keySize != 32 || inputSize > stateSize || inputSize % 16 != 0 ||
+		!input || !key || !state) {
+		printf("Error: aes256_ecb_decrypt(...) was called with one of the following errors:\n \
 			\t Size of key was not 256 bit\n \
 			\t OR inputarray was larger than the statearray\n \
-			\t OR the size of the inputarray was not a multiplicity of 16 bytes and therefore no valid ciphertext\n");
+			\t OR the size of the inputarray was not a multiplicity of 16 bytes and therefore no valid ciphertext\n \
+			\t OR the input, key or output array is a NULL pointer\n");
 
-		exit(EXIT_FAILURE);
+		abort();
 	}
 
 
+	// static to allocate memory at compile time instead of call stack.
 	// For the creation of the same expandedKey the encryption sbox is used
-	uint8_t sbox[] = {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+	static uint8_t sbox[] = {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     		0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
     		0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
     		0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
@@ -168,7 +174,7 @@ void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
     		0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
     		0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16};
 	// For decryption sub_bytes the inverse sbox is needed
-	uint8_t invSbox[] = {0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
+	static uint8_t invSbox[] = {0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
 		0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
 		0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E,
 		0x08, 0x2E, 0xA1, 0x66, 0x28, 0xD9, 0x24, 0xB2, 0x76, 0x5B, 0xA2, 0x49, 0x6D, 0x8B, 0xD1, 0x25,
@@ -184,17 +190,17 @@ void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 		0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D, 0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF,
 		0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
 		0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D};
-	uint8_t invMixMultMatrix[] = {0x0e, 0x0b, 0x0d, 0x09,
+	static uint8_t invMixMultMatrix[] = {0x0e, 0x0b, 0x0d, 0x09,
 		0x09, 0x0e, 0x0b, 0x0d,
 		0x0d, 0x09, 0x0e, 0x0b,
 		0x0b, 0x0d, 0x09, 0x0e};
-	uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
+	static uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
 
 
 	// AES can be applied in-memory, however as we deliver a seperate
 	// plaintext we first have to copy the input to the state to leave
 	// the input unchanged
-	copy_block(input, inputSize, state);
+	memcpy(state, input, inputSize);
 
 	// Expand Key
 	key_expansion(key, expandedKey, sbox);
@@ -227,25 +233,14 @@ void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 
 
 
-/* Copies all bytes of input in order to the state, which size has to be bigger
- * than the size of the input
- */
-void copy_block(const uint8_t *input, size_t inputSize, uint8_t *state)
-{
-	for (int i = 0; i < inputSize; i++) {
-		state[i] = input[i];
-	}
-}
-
-
-
 /* Input: const uint8_t *key	byte-array with original 256bit key
  *		  uint8_t *expandedKey	arbitrary byte-array with 240 bytes
  *		  const uint8_t *sbox	byte-array AES sbox
  *
  * Output: expands the key to the 240 key values according to AES specification
  */
-void key_expansion(const uint8_t *key, uint8_t *expandedKey, const uint8_t *sbox)
+static void key_expansion(const uint8_t *key, uint8_t *expandedKey,
+	const uint8_t *sbox)
 {
 	uint8_t rcon[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40};
 	int round;
@@ -324,7 +319,7 @@ void key_expansion(const uint8_t *key, uint8_t *expandedKey, const uint8_t *sbox
 /* XOR's each byte of the state block with the round corresponding
  * expandedKey byte
  */
-void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round)
+static void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round)
 {
 	for (int i = 0; i < 16; i++) {
 		state[i] = state[i] ^ expandedKey[(16 * round) + i];
@@ -335,7 +330,7 @@ void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round)
 
 /* Replaces each byte of the state block with the corresponding sbox byte
  */
-void sub_bytes(uint8_t *state, const uint8_t *sbox)
+static void sub_bytes(uint8_t *state, const uint8_t *sbox)
 {
 	for (int i = 0; i < 16; i++) {
 		state[i] = sbox[state[i]];
@@ -347,7 +342,7 @@ void sub_bytes(uint8_t *state, const uint8_t *sbox)
 /* Seeing the state as a downward developing 4x4 matrix, the shift_row function
  * shifts the rows according to the inline comments
  */
-void shift_row(uint8_t *state)
+static void shift_row(uint8_t *state)
 {
 	uint8_t tmp;
 
@@ -379,7 +374,7 @@ void shift_row(uint8_t *state)
 /* Seeing the state as a downward developing 4x4 matrix, the inv_shift_row
  * function shifts the rows according to the inline comments
  */
-void inv_shift_row(uint8_t *state)
+static void inv_shift_row(uint8_t *state)
 {
 	uint8_t tmp;
 
@@ -412,7 +407,7 @@ void inv_shift_row(uint8_t *state)
  * function multiplies this state-matrix with the AES specified mix-matrix
  * in the galois field GF(2^8)
  */
-void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix)
+static void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix)
 {
 	// Because state[1|2|3] need state[0] for calculation state[0] can not
 	// be overwritten before all calulation is done. Therefore save the
@@ -450,7 +445,7 @@ void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix)
  * Multiplication see
  * https://en.wikipedia.org/wiki/Finite_field_arithmetic
  */
-uint8_t galois_mul(uint8_t a, uint8_t b)
+static uint8_t galois_mul(uint8_t a, uint8_t b)
 {
 	// p as the product of the multiplication
 	uint8_t p = 0;

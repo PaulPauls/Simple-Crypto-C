@@ -1,5 +1,5 @@
-#ifndef _AES256_ECB_H_
-#define _AES256_ECB_H_
+#ifndef AES256_ECB_H
+#define AES256_ECB_H
 
 #include <stdint.h> // uint8_t
 #include <stddef.h> // size_t
