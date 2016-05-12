@@ -6,9 +6,11 @@
 
 
 
-void aes256_ecb_encrypt(const uint8_t *input, size_t inputSize, const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
+int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
+	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
 
-void aes256_ecb_decrypt(const uint8_t *input, size_t inputSize, const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
+int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
+	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
 
 
 

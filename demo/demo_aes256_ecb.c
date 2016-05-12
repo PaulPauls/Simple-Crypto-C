@@ -1,4 +1,4 @@
-#include <stdio.h>   // printf()
+#include <stdio.h>   // printf(), fprintf()
 #include <stdlib.h>  // ERROR_SUCCESS
 #include <stdint.h>  // uint8_t
 #include <stdbool.h> // true, false
@@ -68,10 +68,17 @@ void plain_cipher_print_cmp(const uint8_t *plaintext, size_t plainSize,
 	uint8_t decryptedCiphertext[sizeof(ciphertext)];
 	int cmpCorrect = true;
 
-	aes256_ecb_encrypt(plaintext, plainSize, key, keySize, ciphertext,
-		sizeof(ciphertext));
-	aes256_ecb_decrypt(ciphertext, sizeof(ciphertext), key, keySize,
-		decryptedCiphertext, sizeof(decryptedCiphertext));
+	if (aes256_ecb_encrypt(plaintext, plainSize, key, keySize, ciphertext,
+		sizeof(ciphertext)) < 0) {
+		fprintf(stderr, "Error when calling aes256_ecb_encrypt()");
+		exit(EXIT_FAILURE);
+	}
+
+	if (aes256_ecb_decrypt(ciphertext, sizeof(ciphertext), key, keySize,
+		decryptedCiphertext, sizeof(decryptedCiphertext)) < 0) {
+		fprintf(stderr, "Error when calling aes256_ecb_encrypt()");
+		exit(EXIT_FAILURE);
+	}
 
 	printf("****************************************\n");
 	printf("Key:\n");
