@@ -76,7 +76,7 @@ void plain_cipher_print_cmp(const uint8_t *plaintext, size_t plainSize,
 
 	if (aes256_ecb_decrypt(ciphertext, sizeof(ciphertext), key, keySize,
 		decryptedCiphertext, sizeof(decryptedCiphertext)) < 0) {
-		fprintf(stderr, "Error when calling aes256_ecb_encrypt()");
+		fprintf(stderr, "Error when calling aes256_ecb_decrypt()");
 		exit(EXIT_FAILURE);
 	}
 

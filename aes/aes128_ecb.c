@@ -5,9 +5,9 @@
 
 
 
-int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
+int aes128_ecb_encrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
-int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
+int aes128_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
 
 // static private functions
@@ -28,13 +28,13 @@ static uint8_t galois_mul(uint8_t a, uint8_t b);
 
 
 
-/* Encrypts input with key to state with AES256 in ECB Mode
+/* Encrypts input with key to state with AES128 in ECB Mode
  *
  * Input:
  *	const uint8_t *input	byte-array of arbitrary content to encrypt
  * 	size_t inputSize	size of input in bytes. Arbitrary.
  *	const uint8_t *key	byte-array of key, can be arbitrary
- *	size_t keySize		size of key in bytes. Has to be 32byte/256bit
+ *	size_t keySize		size of key in bytes. Has to be 16byte/128bit
  *	uint8_t *state		byte-array of state, will be overwritten
  *	size_t stateSize	size of state in bytes, has to a multiplicity
  *				of 16bytes and larger than the size of input
@@ -47,15 +47,15 @@ static uint8_t galois_mul(uint8_t a, uint8_t b);
  *	[3] expand the key according to AES specification
  *	[4] copy the input to the state as AES can be applied in memory and
  *		the input array should not be changed
- *	[5] Apply the 14 rounds of the AES core algorithm to the state
+ *	[5] Apply the 12 rounds of the AES core algorithm to the state
  */
-int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
+int aes128_ecb_encrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize)
 {
-	if (keySize != 32 || inputSize > stateSize || stateSize % 16 != 0 ||
+	if (keySize != 16 || inputSize > stateSize || stateSize % 16 != 0 ||
 		!input || !key || !state) {
-		fprintf(stderr, "Error: aes256_ecb_encrypt(...) was called with one of the following errors:\n \
-			\t Size of key was not 256 bit\n \
+		fprintf(stderr, "Error: aes128_ecb_encrypt(...) was called with one of the following errors:\n \
+			\t Size of key was not 128 bit\n \
 			\t OR inputarray was larger than the statearray\n \
 			\t OR the size of the statearray was not a multiplicity of 16 bytes\n \
 			\t OR the input, key or output array is a NULL pointer\n");
@@ -85,7 +85,7 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 		0x01, 0x02, 0x03, 0x01,
 		0x01, 0x01, 0x02, 0x03,
 		0x03, 0x01, 0x01, 0x02};
-	uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
+	uint8_t expandedKey[176]; // 176 = 16 * 11 = blocksize * (NrOfRounds+1)
 
 
 	// AES can be applied in-memory, however as we deliver a seperate
@@ -102,7 +102,7 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 		add_round_key(&state[stateOffset], expandedKey, 0);
 
 		// middleRounds
-		for (int round = 1; round < 14; round++) {
+		for (int round = 1; round < 10; round++) {
 			sub_bytes(&state[stateOffset], sbox);
 			shift_row(&state[stateOffset]);
 			mix_columns(&state[stateOffset], mixMultMatrix);
@@ -112,7 +112,7 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
     		// lastRound
 		sub_bytes(&state[stateOffset], sbox);
 		shift_row(&state[stateOffset]);
-		add_round_key(&state[stateOffset], expandedKey, 14);
+		add_round_key(&state[stateOffset], expandedKey, 10);
 	}
 
 	return 0;
@@ -120,13 +120,13 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 
 
 
-/* Decrypts input with key to state with AES256 in ECB Mode
+/* Decrypts input with key to state with AES128 in ECB Mode
  *
  * Input:
- *	const uint8_t *input	byte-array encrypted with AES256 to decrypt
+ *	const uint8_t *input	byte-array encrypted with AES128 to decrypt
  * 	size_t inputSize	size of input in bytes. Multiplicity of 16bytes
  *	const uint8_t *key	byte-array of key used to encrypt
- *	size_t keySize		size of key in bytes. Has to be 32byte/256bit
+ *	size_t keySize		size of key in bytes. Has to be 16byte/128bit
  *	uint8_t *state		byte-array of state, will be overwritten with
  *				decrypted plaintext
  *	size_t stateSize	size of state in bytes. has to have size of
@@ -143,13 +143,13 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
  *	[5] Apply the 14 rounds of the AES core algorithm to the state in
  *		reverse order for it to decrypt
  */
-int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
+int aes128_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize)
 {
-	if (keySize != 32 || inputSize > stateSize || inputSize % 16 != 0 ||
+	if (keySize != 16 || inputSize > stateSize || inputSize % 16 != 0 ||
 		!input || !key || !state) {
-		fprintf(stderr, "Error: aes256_ecb_decrypt(...) was called with one of the following errors:\n \
-			\t Size of key was not 256 bit\n \
+		fprintf(stderr, "Error: aes128_ecb_decrypt(...) was called with one of the following errors:\n \
+			\t Size of key was not 128 bit\n \
 			\t OR inputarray was larger than the statearray\n \
 			\t OR the size of the inputarray was not a multiplicity of 16 bytes and therefore no valid ciphertext\n \
 			\t OR the input, key or output array is a NULL pointer\n");
@@ -197,7 +197,7 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 		0x09, 0x0e, 0x0b, 0x0d,
 		0x0d, 0x09, 0x0e, 0x0b,
 		0x0b, 0x0d, 0x09, 0x0e};
-	uint8_t expandedKey[240]; // 240 = 16 * 15 = blocksize * (NrOfRounds+1)
+	uint8_t expandedKey[176]; // 176 = 16 * 11 = blocksize * (NrOfRounds+1)
 
 
 	// AES can be applied in-memory, however as we deliver a seperate
@@ -211,10 +211,10 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	//Execute Algorithm for every 16 Bytes of the state
 	for (int stateOffset = 0; stateOffset < stateSize; stateOffset += 16) {
     		// initialRound
-		add_round_key(&state[stateOffset], expandedKey, 14);
+		add_round_key(&state[stateOffset], expandedKey, 10);
 
 		// middleRounds
-		for (int round = 13; round > 0; round--) {
+		for (int round = 9; round > 0; round--) {
 			inv_shift_row(&state[stateOffset]);
 			sub_bytes(&state[stateOffset], invSbox);
 			add_round_key(&state[stateOffset], expandedKey, round);
@@ -238,11 +238,11 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 
 
 
-/* Input: const uint8_t *key	byte-array with original 256bit key
- *		  uint8_t *expandedKey	arbitrary byte-array with 240 bytes
+/* Input: const uint8_t *key	byte-array with original 128bit key
+ *		  uint8_t *expandedKey	arbitrary byte-array with 176 bytes
  *		  const uint8_t *sbox	byte-array AES sbox
  *
- * Output: expands the key to the 240 key values according to AES specification
+ * Output: expands the key to the 176 key values according to AES specification
  */
 static void key_expansion(const uint8_t *key, uint8_t *expandedKey,
 	const uint8_t *sbox)
@@ -251,7 +251,7 @@ static void key_expansion(const uint8_t *key, uint8_t *expandedKey,
 	int round;
 
 	// First Copy the given key into the expandedKey as a basis to start expanding on
-	for (round = 0; round < (32 / 4); round++) {
+	for (round = 0; round < (16 / 4); round++) {
 		expandedKey[(4 * round) + 0] = key[(4 * round) + 0];
 		expandedKey[(4 * round) + 1] = key[(4 * round) + 1];
 		expandedKey[(4 * round) + 2] = key[(4 * round) + 2];
@@ -259,7 +259,7 @@ static void key_expansion(const uint8_t *key, uint8_t *expandedKey,
 	}
 
 	// Now walk through the generation of the remaining bytes of the expandedKey
-	for (round = 8; round < (240 / 4); round++) {
+	for (round = 8; round < (176 / 4); round++) {
 		if (round % 4 == 0) {
 			if (round % 8 == 0) {
 				// RoundKey =
