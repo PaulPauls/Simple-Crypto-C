@@ -6,9 +6,6 @@
 
 
 
-void key_expansion(const uint8_t *key, size_t keySize, uint8_t *expandedKey,
-	size_t expandedKeySize, const uint8_t *sbox);
-
 void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round);
 
 void sub_bytes(uint8_t *state, const uint8_t *sbox);

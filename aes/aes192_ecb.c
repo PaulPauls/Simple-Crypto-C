@@ -3,8 +3,8 @@
 #include <stdlib.h> // size_t
 #include <string.h> // memcpy()
 
-#include "aes_lib_ecb.h" // key_expansion(), add_round_key(), sub_bytes(),
-			 // shift_row, inv_shift_row, mix_columns, galois_mul()
+#include "aes_lib_ecb.h" // add_round_key(), sub_bytes(), shift_row(),
+			 // inv_shift_row(), mix_columns(), galois_mul()
 
 
 
@@ -90,7 +90,7 @@ int aes192_ecb_encrypt(const uint8_t *input, size_t inputSize,
 		add_round_key(&state[stateOffset], expandedKey, 0);
 
 		// middleRounds
-		for (int round = 1; round < 12; round++) {
+		for (int round = 1; round <= 11; round++) {
 			sub_bytes(&state[stateOffset], sbox);
 			shift_row(&state[stateOffset]);
 			mix_columns(&state[stateOffset], mixMultMatrix);
@@ -202,7 +202,7 @@ int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize,
 		add_round_key(&state[stateOffset], expandedKey, 12);
 
 		// middleRounds
-		for (int round = 11; round > 0; round--) {
+		for (int round = 11; round >= 1; round--) {
 			inv_shift_row(&state[stateOffset]);
 			sub_bytes(&state[stateOffset], invSbox);
 			add_round_key(&state[stateOffset], expandedKey, round);

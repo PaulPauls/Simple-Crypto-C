@@ -3,8 +3,8 @@
 #include <stdlib.h> // size_t
 #include <string.h> // memcpy()
 
-#include "aes_lib_ecb.h" // key_expansion(), add_round_key(), sub_bytes(),
-			 // shift_row, inv_shift_row, mix_columns, galois_mul()
+#include "aes_lib_ecb.h" // add_round_key(), sub_bytes(), shift_row(),
+			 // inv_shift_row(), mix_columns(), galois_mul()
 
 
 
@@ -13,6 +13,12 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
 int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
+
+
+
+// private functions
+void key_expansion(const uint8_t *key, size_t keySize, uint8_t *expandedKey,
+	size_t expandedKeySize, const uint8_t *sbox);
 
 
 
@@ -90,7 +96,7 @@ int aes256_ecb_encrypt(const uint8_t *input, size_t inputSize,
 		add_round_key(&state[stateOffset], expandedKey, 0);
 
 		// middleRounds
-		for (int round = 1; round < 14; round++) {
+		for (int round = 1; round <= 13; round++) {
 			sub_bytes(&state[stateOffset], sbox);
 			shift_row(&state[stateOffset]);
 			mix_columns(&state[stateOffset], mixMultMatrix);
@@ -202,7 +208,7 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 		add_round_key(&state[stateOffset], expandedKey, 14);
 
 		// middleRounds
-		for (int round = 13; round > 0; round--) {
+		for (int round = 13; round >= 1; round--) {
 			inv_shift_row(&state[stateOffset]);
 			sub_bytes(&state[stateOffset], invSbox);
 			add_round_key(&state[stateOffset], expandedKey, round);
@@ -216,5 +222,88 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	}
 
 	return 0;
+}
+
+
+
+/* Input: const uint8_t *key	byte-array with original 256bit key
+ *		  uint8_t *expandedKey	arbitrary byte-array with 240 bytes
+ *		  const uint8_t *sbox	byte-array AES sbox
+ *
+ * Output: expands the key to the 240 key values according to AES specification
+ */
+void key_expansion(const uint8_t *key, size_t keySize, uint8_t *expandedKey,
+	size_t expandedKeySize, const uint8_t *sbox)
+{
+	static const uint8_t rcon[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40};
+	int round;
+
+	// First Copy the given key into the expandedKey as a basis to start expanding on
+	for (round = 0; round < (keySize / 4); round++) {
+		expandedKey[(4 * round) + 0] = key[(4 * round) + 0];
+		expandedKey[(4 * round) + 1] = key[(4 * round) + 1];
+		expandedKey[(4 * round) + 2] = key[(4 * round) + 2];
+		expandedKey[(4 * round) + 3] = key[(4 * round) + 3];
+	}
+
+	// Now walk through the generation of the remaining bytes of the expandedKey
+	for (round = 8; round < (expandedKeySize / 4); round++) {
+		if (round % 4 == 0) {
+			if (round % 8 == 0) {
+				// RoundKey =
+				// sub_word(rot_word(expanded_key(round - 1) * 4)))
+				// XOR rcon((round / 8) - 1)
+				// XOR expanded_key((round - 8) * 4)
+				expandedKey[(4 * round) + 0] =
+					sbox[expandedKey[(4 * (round - 1)) + 1]]
+					^ rcon[(round / 8) - 1]
+					^ expandedKey[(4 * (round - 8)) + 0];
+				expandedKey[(4 * round) + 1] =
+					sbox[expandedKey[(4 * (round - 1)) + 2]]
+					^ 0x00
+					^ expandedKey[(4 * (round - 8)) + 1];
+				expandedKey[(4 * round) + 2] =
+					sbox[expandedKey[(4 * (round - 1)) + 3]]
+					^ 0x00
+					^ expandedKey[(4 * (round - 8)) + 2];
+				expandedKey[(4 * round) + 3] =
+					sbox[expandedKey[(4 * (round - 1)) + 0]]
+					^ 0x00
+					^ expandedKey[(4 * (round - 8)) + 3];
+			} else {
+				// RoundKey =
+				// sub_word(expanded_key(round - 1) * 4))
+				// XOR expanded_key((round - 8) * 4)
+				expandedKey[(4 * round) + 0] =
+					sbox[expandedKey[(4 * (round - 1)) + 0]]
+					^ expandedKey[(4 * (round - 8)) + 0];
+				expandedKey[(4 * round) + 1] =
+					sbox[expandedKey[(4 * (round - 1)) + 1]]
+					^ expandedKey[(4 * (round - 8)) + 1];
+				expandedKey[(4 * round) + 2] =
+					sbox[expandedKey[(4 * (round - 1)) + 2]]
+					^ expandedKey[(4 * (round - 8)) + 2];
+				expandedKey[(4 * round) + 3] =
+					sbox[expandedKey[(4 * (round - 1)) + 3]]
+					^ expandedKey[(4 * (round - 8)) + 3];
+			}
+		} else {
+			// RoundKey =
+			// expanded_key((round - 1) * 4)
+			// XOR expanded_key((round - 8) * 4)
+			expandedKey[(4 * round) + 0] =
+				expandedKey[(4 * (round - 1)) + 0]
+				^ expandedKey[(4 * (round - 8)) + 0];
+			expandedKey[(4 * round) + 1] =
+				expandedKey[(4 * (round - 1)) + 1]
+				^ expandedKey[(4 * (round - 8)) + 1];
+			expandedKey[(4 * round) + 2] =
+				expandedKey[(4 * (round - 1)) + 2]
+				^ expandedKey[(4 * (round - 8)) + 2];
+			expandedKey[(4 * round) + 3] =
+				expandedKey[(4 * (round - 1)) + 3]
+				^ expandedKey[(4 * (round - 8)) + 3];
+		}
+	}
 }
 
