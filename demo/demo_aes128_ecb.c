@@ -3,7 +3,7 @@
 #include <stdint.h>  // uint8_t
 #include <stdbool.h> // true, false
 
-#include "aes256_ecb.h" // aes256_ecb_encrypt(), aes256_ecb_decrypt()
+#include "aes128_ecb.h" // aes128_ecb_encrypt(), aes128_ecb_decrypt()
 
 
 
@@ -14,15 +14,13 @@ void print_hex(const uint8_t *hex, size_t size);
 
 
 
-/* Demo of the aes256 ECB mode, which uses the key and the plaintexts defined
+/* Demo of the aes128 ECB mode, which uses the key and the plaintexts defined
  * as test vectors in 'NIST SP 800-38A' document.
  */
 int main()
 {
-	uint8_t key[] = {0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
-        	0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
-                0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7,
-                0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4};
+	uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+		0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 	uint8_t plaintext1[] = {0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
 		0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a};
 	uint8_t plaintext2[] = {0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
@@ -68,15 +66,15 @@ void plain_cipher_cmp(const uint8_t *plaintext, size_t plainSize,
 	uint8_t decryptedCiphertext[sizeof(ciphertext)];
 	int cmpCorrect = true;
 
-	if (aes256_ecb_encrypt(plaintext, plainSize, key, keySize, ciphertext,
+	if (aes128_ecb_encrypt(plaintext, plainSize, key, keySize, ciphertext,
 		sizeof(ciphertext)) < 0) {
-		fprintf(stderr, "Error when calling aes256_ecb_encrypt()");
+		fprintf(stderr, "Error when calling aes128_ecb_encrypt()");
 		exit(EXIT_FAILURE);
 	}
 
-	if (aes256_ecb_decrypt(ciphertext, sizeof(ciphertext), key, keySize,
+	if (aes128_ecb_decrypt(ciphertext, sizeof(ciphertext), key, keySize,
 		decryptedCiphertext, sizeof(decryptedCiphertext)) < 0) {
-		fprintf(stderr, "Error when calling aes256_ecb_decrypt()");
+		fprintf(stderr, "Error when calling aes128_ecb_decrypt()");
 		exit(EXIT_FAILURE);
 	}
 
@@ -93,10 +91,10 @@ void plain_cipher_cmp(const uint8_t *plaintext, size_t plainSize,
 
 	printf("\nPlaintext%d equals decrypt(Ciphertext%d): ", nr, nr);
 
+	// traverse plaintext and decryptedCiphertext to check for differences
 	if (plainSize != sizeof(decryptedCiphertext))
 		cmpCorrect = false;
 
-	// traverse plaintext and decryptedCiphertext to check for differences
 	for (int i = 0; i < plainSize; i++) {
 		if(plaintext[i] != decryptedCiphertext[i])
 			cmpCorrect = false;
