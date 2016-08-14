@@ -16,6 +16,12 @@ int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize,
 
 
 
+// private functions
+void key_expansion(const uint8_t *key, size_t keySize, uint8_t *expandedKey,
+	size_t expandedKeySize, const uint8_t *sbox);
+
+
+
 /* Encrypts input with key to state with AES192 in ECB Mode
  *
  * Input:
@@ -216,5 +222,19 @@ int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize,
 	}
 
 	return 0;
+}
+
+
+
+/* Input:	const uint8_t *key	byte-array with original 192bit key
+ *		uint8_t *expandedKey	arbitrary byte-array with 208 bytes
+ *		const uint8_t *sbox	byte-array AES sbox
+ *
+ * Output: expands the key to the 208 key values according to AES specification
+ */
+void key_expansion(const uint8_t *key, size_t keySize, uint8_t *expandedKey,
+	size_t expandedKeySize, const uint8_t *sbox)
+{
+
 }
 

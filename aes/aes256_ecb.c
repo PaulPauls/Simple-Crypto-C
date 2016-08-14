@@ -226,9 +226,9 @@ int aes256_ecb_decrypt(const uint8_t *input, size_t inputSize,
 
 
 
-/* Input: const uint8_t *key	byte-array with original 256bit key
- *		  uint8_t *expandedKey	arbitrary byte-array with 240 bytes
- *		  const uint8_t *sbox	byte-array AES sbox
+/* Input:	const uint8_t *key	byte-array with original 256bit key
+ *		uint8_t *expandedKey	arbitrary byte-array with 240 bytes
+ *		const uint8_t *sbox	byte-array AES sbox
  *
  * Output: expands the key to the 240 key values according to AES specification
  */
