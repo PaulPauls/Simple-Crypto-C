@@ -6,11 +6,9 @@
 
 
 
-int aes192_ecb_encrypt(const uint8_t *input, size_t inputSize,
-	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
+int aes192_ecb_encrypt(const uint8_t *input, size_t inputSize, const uint8_t *key, size_t keySize, uint8_t *output, size_t outputSize);
 
-int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize,
-	const uint8_t *key, size_t keySize, uint8_t *state, size_t stateSize);
+int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize, const uint8_t *key, size_t keySize, uint8_t *output, size_t outputSize);
 
 
 

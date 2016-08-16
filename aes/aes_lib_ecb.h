@@ -8,15 +8,17 @@
 
 void add_round_key(uint8_t *state, const uint8_t *expandedKey, int round);
 
-void sub_bytes(uint8_t *state, const uint8_t *sbox);
+void sub_bytes(uint8_t *state);
+
+void inv_sub_bytes(uint8_t *state);
 
 void shift_row(uint8_t *state);
 
 void inv_shift_row(uint8_t *state);
 
-void mix_columns(uint8_t *state, const uint8_t *mixMultMatrix);
+void mix_columns(uint8_t *state);
 
-uint8_t galois_mul(uint8_t a, uint8_t b);
+void inv_mix_columns(uint8_t *state);
 
 
 
