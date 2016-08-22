@@ -160,24 +160,24 @@ void key256_expansion(const uint8_t *key, uint8_t *expandedKey)
 	for (int round = 8; round < 60; round++) {
 		if (round % 4 == 0) {
 			if (round % 8 == 0) {
-				// expandedKey[4 * round] = sub_word(rot_word(expandedKey[4 * (round - 1)])) XOR rcon[(round / 8) - 1] XOR expandedKey[4 * (round - 8)]
-				expandedKey[(4 * round) + 0] = sbox[expandedKey[(4 * (round - 1)) + 1]] ^ rcon[(round / 8) - 1] ^ expandedKey[(4 * (round - 8)) + 0];
-				expandedKey[(4 * round) + 1] = sbox[expandedKey[(4 * (round - 1)) + 2]] ^ 0x00 ^ expandedKey[(4 * (round - 8)) + 1];
-				expandedKey[(4 * round) + 2] = sbox[expandedKey[(4 * (round - 1)) + 3]] ^ 0x00 ^ expandedKey[(4 * (round - 8)) + 2];
-				expandedKey[(4 * round) + 3] = sbox[expandedKey[(4 * (round - 1)) + 0]] ^ 0x00 ^ expandedKey[(4 * (round - 8)) + 3];
+				// expandedKey[round * 4] = sub_word(rot_word(expandedKey[(round - 1) * 4])) XOR rcon_word((round / 8) - 1) XOR expandedKey[(round - 8) * 4]
+				expandedKey[(round * 4) + 0] = sbox[expandedKey[((round - 1) * 4) + 1]] ^ rcon[(round / 8) - 1] ^ expandedKey[((round - 8) * 4) + 0];
+				expandedKey[(round * 4) + 1] = sbox[expandedKey[((round - 1) * 4) + 2]] ^ 0x00 ^ expandedKey[((round - 8) * 4) + 1];
+				expandedKey[(round * 4) + 2] = sbox[expandedKey[((round - 1) * 4) + 3]] ^ 0x00 ^ expandedKey[((round - 8) * 4) + 2];
+				expandedKey[(round * 4) + 3] = sbox[expandedKey[((round - 1) * 4) + 0]] ^ 0x00 ^ expandedKey[((round - 8) * 4) + 3];
 			} else {
-				// expandedKey[4 * round] = sub_word(expandedKey[4 * (round -1)]) XOR expandedKey[4 * (round - 8)]
-				expandedKey[(4 * round) + 0] = sbox[expandedKey[(4 * (round - 1)) + 0]] ^ expandedKey[(4 * (round - 8)) + 0];
-				expandedKey[(4 * round) + 1] = sbox[expandedKey[(4 * (round - 1)) + 1]] ^ expandedKey[(4 * (round - 8)) + 1];
-				expandedKey[(4 * round) + 2] = sbox[expandedKey[(4 * (round - 1)) + 2]] ^ expandedKey[(4 * (round - 8)) + 2];
-				expandedKey[(4 * round) + 3] = sbox[expandedKey[(4 * (round - 1)) + 3]] ^ expandedKey[(4 * (round - 8)) + 3];
+				// expandedKey[round * 4] = sub_word(expandedKey[(round -1) * 4]) XOR expandedKey[(round - 8) * 4]
+				expandedKey[(round * 4) + 0] = sbox[expandedKey[((round - 1) * 4) + 0]] ^ expandedKey[((round - 8) * 4) + 0];
+				expandedKey[(round * 4) + 1] = sbox[expandedKey[((round - 1) * 4) + 1]] ^ expandedKey[((round - 8) * 4) + 1];
+				expandedKey[(round * 4) + 2] = sbox[expandedKey[((round - 1) * 4) + 2]] ^ expandedKey[((round - 8) * 4) + 2];
+				expandedKey[(round * 4) + 3] = sbox[expandedKey[((round - 1) * 4) + 3]] ^ expandedKey[((round - 8) * 4) + 3];
 			}
 		} else {
-			// expandedKey[4 * round] = expandedKey[4 * (round - 1)] XOR expandedKey[4 * (round - 8)]
-			expandedKey[(4 * round) + 0] = expandedKey[(4 * (round - 1)) + 0] ^ expandedKey[(4 * (round - 8)) + 0];
-			expandedKey[(4 * round) + 1] = expandedKey[(4 * (round - 1)) + 1] ^ expandedKey[(4 * (round - 8)) + 1];
-			expandedKey[(4 * round) + 2] = expandedKey[(4 * (round - 1)) + 2] ^ expandedKey[(4 * (round - 8)) + 2];
-			expandedKey[(4 * round) + 3] = expandedKey[(4 * (round - 1)) + 3] ^ expandedKey[(4 * (round - 8)) + 3];
+			// expandedKey[round * 4] = expandedKey[(round - 1) * 4] XOR expandedKey[(round - 8) * 4]
+			expandedKey[(round * 4) + 0] = expandedKey[((round - 1) * 4) + 0] ^ expandedKey[((round - 8) * 4) + 0];
+			expandedKey[(round * 4) + 1] = expandedKey[((round - 1) * 4) + 1] ^ expandedKey[((round - 8) * 4) + 1];
+			expandedKey[(round * 4) + 2] = expandedKey[((round - 1) * 4) + 2] ^ expandedKey[((round - 8) * 4) + 2];
+			expandedKey[(round * 4) + 3] = expandedKey[((round - 1) * 4) + 3] ^ expandedKey[((round - 8) * 4) + 3];
 		}
 	}
 }
