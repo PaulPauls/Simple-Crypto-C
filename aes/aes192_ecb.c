@@ -122,7 +122,7 @@ int aes192_ecb_decrypt(const uint8_t *input, size_t inputSize, const uint8_t *ke
 
 
 
-/* Expands the key to the 208 byte expandedKey according to AES specifications
+/* Expands the key into the 208 byte expandedKey according to AES specifications
  *
  * const uint8_t *key:   byte-array with initial 24 bytes key
  * uint8_t *expandedKey: arbitrary byte-array of size 208 bytes
@@ -149,10 +149,10 @@ void key192_expansion(const uint8_t *key, uint8_t *expandedKey)
 
 	// First copy initial key to expandedKey as a basis to expand upon
 	for (int round = 0; round < 6; round++) {
-			expandedKey[(4 * round) + 0] = key[(4 * round) + 0];
-			expandedKey[(4 * round) + 1] = key[(4 * round) + 1];
-			expandedKey[(4 * round) + 2] = key[(4 * round) + 2];
-			expandedKey[(4 * round) + 3] = key[(4 * round) + 3];
+		expandedKey[(4 * round) + 0] = key[(4 * round) + 0];
+		expandedKey[(4 * round) + 1] = key[(4 * round) + 1];
+		expandedKey[(4 * round) + 2] = key[(4 * round) + 2];
+		expandedKey[(4 * round) + 3] = key[(4 * round) + 3];
 	}
 
 	// Expand the expandedKey according to AES specification. Each round
