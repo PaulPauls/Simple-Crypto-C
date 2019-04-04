@@ -1,22 +1,7 @@
-Implementation of various cryptographic functions with demos
-============================================================
+Very simple and highly documented implementation of the Advanced Encryption 
+Standard (AES) in Electronic Codebook (ECB) mode, that follows pretty 
+straightforward the official implementation guide in the NIST document FIPS 197.
 
-### Any bugfixes or suggestions for improvement are highly welcome and appreciated!
-Improvements of the following kind (no matter how small) are especially welcome:
-- Bugs
-- Improvements on Understandability
-- Improvements on Speed without reducing understandability
-- Improvements on Coding Style
-
-
-Demo files and detailed comments show how to call and use the library functions.
-This Crypto Implementation is not intended for maximal speed or minimal use of
-memory but rather for a good understandability of the code.
-Therefore I highly recommend to only use the implementations to learn about
-their behaviour in code and to actually **use expert implementations** from
-libressl or openssl in code. Expert implementations are faster and are tested
-against side-channel attacks.
-
-
-Author: Paul Pauls (https://github.com/PaulPauls)
+This implementation is intended for understandability and readability for the
+purpose of teaching. Feedback welcome.
 
